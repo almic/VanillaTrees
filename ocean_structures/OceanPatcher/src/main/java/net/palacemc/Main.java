@@ -47,6 +47,9 @@ public class Main {
     // Relative path of ruins and shipwrecks should be "VanillaTrees\ocean_structures" and this project should be in that path
     private static Path structurePath = Paths.get("").resolve("../").toAbsolutePath().normalize();
 
+    // Until WorldPainter supports multiple palettes, leave this as 'true'
+    private static boolean splitPalettes = true;
+
     public static void main (String[] args) {
         System.out.println("Working directory: " + structurePath.toString());
 
@@ -161,7 +164,6 @@ public class Main {
                 Path outPath = shipFile.toPath().resolve("../../"); // Back out of the "default" directory
                 Random rng = new Random();
                 for (int i = 0; i < 10; i++) {
-                    File shipOut = outPath.resolve(shipName + "_" + i + ".nbt").toFile();
 
                     // LootTable: "minecraft:chests/shipwreck_treasure"
                     // LootTableSeed: 7000719051697139786
@@ -204,6 +206,17 @@ public class Main {
 
                     ship.put("blocks", blocks);
 
+                    // WorldPainter currently doesn't support multiple palettes, so we just use the first palette
+                    if (splitPalettes) {
+                        ship.remove("palettes");
+                        ship.put("palette", palettes.getList(0));
+                    }
+
+                    Path temp = outPath.resolve("generated/" + shipName + "_" + i + ".nbt");
+                    //noinspection ResultOfMethodCallIgnored
+                    temp.resolve("../").toFile().mkdirs(); // Ensure directory exists
+                    File shipOut = temp.toFile();
+
                     try {
                         NbtIo.writeCompressed(ship, new FileOutputStream(shipOut));
                         success++;
@@ -222,7 +235,7 @@ public class Main {
         System.out.println("Successfully created " + success + " shipwrecks, with " + (ships.size() * 10 - success) + " failures.");
 
         System.out.println("\nNow building ruins");
-        System.out.println("Finding shipwrecks...");
+        System.out.println("Finding ruins...");
         dir = structurePath.resolve("ruins/default").toFile();
         listing = dir.listFiles();
         assert listing != null;
@@ -310,7 +323,6 @@ public class Main {
                 Random rng = new Random();
                 boolean isBig = ruinFile.getName().startsWith("big");
                 for (int i = 0; i < 10; i++) {
-                    File ruinOut = outPath.resolve(ruinName + "_" + i + ".nbt").toFile();
 
                     // LootTable: "minecraft:chests/underwater_ruin_small"
                     // LootTableSeed: 7000719051697139786
@@ -325,6 +337,11 @@ public class Main {
                     chest.put("nbt", nbt);
                     blocks.set(chestLocation, chest);
                     ruin.put("blocks", blocks);
+
+                    Path temp = outPath.resolve("generated/" + ruinName + "_" + i + ".nbt");
+                    //noinspection ResultOfMethodCallIgnored
+                    temp.resolve("../").toFile().mkdirs(); // Ensure directory exists
+                    File ruinOut = temp.toFile();
 
                     try {
                         NbtIo.writeCompressed(ruin, new FileOutputStream(ruinOut));
