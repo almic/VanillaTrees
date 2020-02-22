@@ -2,18 +2,35 @@
 package net.palacemc;
 
 class BlockPos {
-    private int x, y, z;
+    int x, y, z;
+    private int index, state;
 
     BlockPos () {
         x = 0;
         y = 0;
         z = 0;
+        index = 0;
     }
 
     BlockPos (int x, int y, int z) {
+        this();
         this.x = x;
         this.y = y;
         this.z = z;
+    }
+
+    BlockPos (int x, int y, int z, int index, int state) {
+        this(x, y, z);
+        this.index = index;
+        this.state = state;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public int getState() {
+        return state;
     }
 
     @Override
@@ -26,5 +43,19 @@ class BlockPos {
         }
 
         return false;
+    }
+
+    public BlockPos relative(Direction direction) {
+        switch (direction) {
+            case NORTH: return new BlockPos(x, y, z - 1);
+            case EAST: return new BlockPos(x + 1, y, z);
+            case SOUTH: return new BlockPos(x, y, z + 1);
+            case WEST: return new BlockPos(x - 1, y, z);
+            default: return null; // should never happen
+        }
+    }
+
+    public BlockPos simple() {
+        return new BlockPos(x, y, z);
     }
 }

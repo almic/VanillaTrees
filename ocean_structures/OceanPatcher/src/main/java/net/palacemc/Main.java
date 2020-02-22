@@ -67,21 +67,21 @@ public class Main {
                 CompoundTag ship = NbtIo.readCompressed(new FileInputStream(shipFile));
 
                 // First step, fix the palettes by removing the structure blocks and making all stairs/ slabs waterlogged
-                ListTag palettes = ship.getList("palettes", 9); // 9 = List (palettes is a List of Lists)
+                ListTag palettes = ship.getList("palettes", 9).copy(); // 9 = List (palettes is a List of Lists)
                 int[] newIndex = new int[palettes.getList(0).size()];
                 int currIndex = 0;
 
                 // update palettes
                 for (int i = 0; i < palettes.size(); i++) {
-                    ListTag palette = palettes.getList(i);
+                    ListTag palette = palettes.getList(i).copy();
                     ListTag newPalette = new ListTag();
 
                     for (int k = 0; k < palette.size(); k++) {
-                        CompoundTag item = palette.getCompound(k);
+                        CompoundTag item = palette.getCompound(k).copy();
 
                         // remove the structure block, set waterlogged
                         if (!item.getString("Name").equalsIgnoreCase("minecraft:structure_block")) {
-                            CompoundTag props = item.getCompound("Properties");
+                            CompoundTag props = item.getCompound("Properties").copy();
                             if (props.contains("waterlogged", 8)) { // 8 = StringTag
                                 props.putString("waterlogged", "true");
                                 item.put("Properties", props);
@@ -102,31 +102,31 @@ public class Main {
                     palettes.set(i, newPalette);
                 }
 
-                ship.put("palettes", palettes);
-
                 // remove structure blocks, store chest locations and type. There can be up to three chests in each ship.
                 ArrayList<Integer> chestLocations = new ArrayList<>();
                 BlockPos mapChest = null, supplyChest = null, treasureChest = null;
 
-                ListTag blocks = ship.getList("blocks", 10); // 10 = CompoundTag
-                ListTag newBlocks = new ListTag();
+                ListTag blocks = ship.getList("blocks", 10).copy(); // 10 = CompoundTag
 
                 for (int i = 0; i < blocks.size(); i++) {
-                    CompoundTag block = blocks.getCompound(i);
+                    CompoundTag block = blocks.getCompound(i).copy();
                     int index = newIndex[block.getInt("state")];
                     if (index != -1) {
                         block.putInt("state", index);
-                        newBlocks.add(block);
+                        blocks.set(i, block);
 
-                        CompoundTag nbt = block.getCompound("nbt");
+                        CompoundTag nbt = block.getCompound("nbt").copy();
                         if (nbt.getString("id").equalsIgnoreCase("minecraft:chest")) {
-                            chestLocations.add(newBlocks.size() - 1);
+                            chestLocations.add(i);
                         }
+
+                        currIndex++;
                     } else {
                         // structure block, store location according to type
-                        CompoundTag nbt = block.getCompound("nbt");
+                        blocks.remove(i--);
+                        CompoundTag nbt = block.getCompound("nbt").copy();
                         String type = nbt.getString("metadata");
-                        ListTag position = block.getList("pos", 3); // 3 = IntTag
+                        ListTag position = block.getList("pos", 3).copy(); // 3 = IntTag
 
                         // These data structure blocks are placed on top of the chest they affect
                         BlockPos tempPos = new BlockPos(position.getInt(0), position.getInt(1) - 1, position.getInt(2));
@@ -141,13 +141,11 @@ public class Main {
                     }
                 }
 
-                blocks = newBlocks;
-
                 // Match up the chests (Type to ListIndex)
                 Map<Integer, Integer> matches = Maps.newHashMap();
                 for (int loc : chestLocations) {
-                    CompoundTag block = blocks.getCompound(loc);
-                    ListTag pos = block.getList("pos", 3); // 3 = IntTag
+                    CompoundTag block = blocks.getCompound(loc).copy();
+                    ListTag pos = block.getList("pos", 3).copy(); // 3 = IntTag
                     BlockPos blockPos = new BlockPos(pos.getInt(0), pos.getInt(1), pos.getInt(2));
                     if (blockPos.equals(mapChest)) {
                         matches.put(0, loc);
@@ -157,6 +155,104 @@ public class Main {
                         matches.put(2, loc);
                     }
                 }
+
+                // Annoyingly, none of the fences are connected and none of the stairs have the right shape. Cool.
+                // We do all this work here so it's completely separate from the rest, mixing it into the above is sure
+                // to be more difficult and cause issues.
+
+                // Build the list of blocks by position, to make determining direction easier
+                Map<BlockPos, CompoundTag> blockMap = Maps.newHashMap();
+                for (int i = 0; i < blocks.size(); i++) {
+                    CompoundTag block = blocks.getCompound(i).copy();
+                    ListTag pos = block.getList("pos", 3).copy(); // 3 = IntTag
+                    int state = block.getInt("state");
+                    blockMap.put(
+                            new BlockPos(pos.getInt(0), pos.getInt(1), pos.getInt(2), i, state),
+                            palettes.getList(0).getCompound(state).copy()
+                    );
+                }
+
+                StairFenceHelper helper = new StairFenceHelper(blockMap);
+                ArrayList<ListTag> newPalettes = new ArrayList<>();
+
+                // initiate palettes
+                for (int i = 0; i < palettes.size(); i++)
+                    newPalettes.add(new ListTag());
+
+                blockMap.forEach((position, block) -> {
+                    int paletteIndex = position.getState();
+                    for (int i = 0; i < palettes.size(); i++) {
+                        ListTag newPalette = newPalettes.get(i).copy();
+                        CompoundTag newEntry = palettes.getList(i).getCompound(paletteIndex).copy();
+
+                        // Fix stairs
+                        String shape = helper.getStairShape(position);
+                        if (!shape.isEmpty()) {
+                            // Update entry
+                            CompoundTag props = newEntry.getCompound("Properties").copy();
+                            props.putString("shape", shape);
+                            newEntry.put("Properties", props);
+                        } else {
+                            // Fix fences
+                            boolean[] connections = helper.getFenceConnections(position);
+                            if (connections.length == 4) {
+                                // Update entry
+                                CompoundTag props = newEntry.getCompound("Properties").copy();
+                                props.putString("north", connections[0] ? "true" : "false");
+                                props.putString("east", connections[1] ? "true" : "false");
+                                props.putString("south", connections[2] ? "true" : "false");
+                                props.putString("west", connections[3] ? "true" : "false");
+                                newEntry.put("Properties", props);
+                            } else if (newEntry.getString("Name").endsWith("_door")){
+                                // Fix doors
+                                CompoundTag props = newEntry.getCompound("Properties").copy();
+                                props.putString("facing", "east"); // lower half is "south" ?!
+                                props.putString("hinge", "left");  // lower half is "right" ?!
+                                newEntry.put("Properties", props);
+                                // I don't even know why it's like this... seriously wtf Minecraft?
+                            }
+                        }
+
+                        // Add to palette and update the block
+                        int loc = -1;
+                        for (int k = 0; k < newPalette.size(); k++) {
+                            CompoundTag item = newPalette.getCompound(k).copy();
+                            if (newEntry.equals(item)) {
+                                //System.out.println(item.getString("Name"));
+                                //System.out.println(newEntry.getString("Name"));
+                                loc = k;
+                                break;
+                            }
+                        }
+
+                        if (loc == -1) {
+                            newPalette.add(newEntry);
+                            loc = newPalette.size() - 1;
+                        }
+
+                        CompoundTag tBlock = new CompoundTag();
+                        ListTag pos = new ListTag();
+                        pos.add(IntTag.valueOf(position.x));
+                        pos.add(IntTag.valueOf(position.y));
+                        pos.add(IntTag.valueOf(position.z));
+
+                        tBlock.put("pos", pos);
+                        tBlock.putInt("state", loc);
+
+                        blocks.set(position.getIndex(), tBlock);
+                        newPalettes.set(i, newPalette);
+                    }
+                });
+
+                /*for (int i = 0; i < palettes.size(); i++) {
+                    System.out.println(i + ": " + palettes.getList(i).size());
+                }*/
+
+                for (int i = 0; i < newPalettes.size(); i++) {
+                    palettes.set(i, newPalettes.get(i));
+                }
+
+                ship.put("palettes", palettes);
 
                 // Now, we make 10 versions with random loot seeds
                 String shipName = shipFile.getName();
@@ -170,7 +266,7 @@ public class Main {
 
                     if (matches.containsKey(0)) {
                         // map
-                        CompoundTag chest = blocks.getCompound(matches.get(0));
+                        CompoundTag chest = blocks.getCompound(matches.get(0)).copy();
                         CompoundTag nbt = new CompoundTag();
                         nbt.putString("id", "minecraft:chest");
                         nbt.putString("LootTable", "minecraft:chests/shipwreck_map");
@@ -182,7 +278,7 @@ public class Main {
 
                     if (matches.containsKey(1)) {
                         // supply
-                        CompoundTag chest = blocks.getCompound(matches.get(1));
+                        CompoundTag chest = blocks.getCompound(matches.get(1)).copy();
                         CompoundTag nbt = new CompoundTag();
                         nbt.putString("id", "minecraft:chest");
                         nbt.putString("LootTable", "minecraft:chests/shipwreck_supply");
@@ -194,7 +290,7 @@ public class Main {
 
                     if (matches.containsKey(2)) {
                         // treasure
-                        CompoundTag chest = blocks.getCompound(matches.get(2));
+                        CompoundTag chest = blocks.getCompound(matches.get(2)).copy();
                         CompoundTag nbt = new CompoundTag();
                         nbt.putString("id", "minecraft:chest");
                         nbt.putString("LootTable", "minecraft:chests/shipwreck_treasure");
@@ -256,17 +352,22 @@ public class Main {
             try {
                 CompoundTag ruin = NbtIo.readCompressed(new FileInputStream(ruinFile));
 
-                ListTag palette = ruin.getList("palette", 10); // 10 = CompoundTag
+                ListTag palette = ruin.getList("palette", 10).copy(); // 10 = CompoundTag
 
                 // remap the palette for air and structure block removal
                 int[] newIndex = new int[palette.size()];
                 int currIndex = 0;
                 ListTag newPalette = new ListTag();
                 for (int i = 0; i < palette.size(); i++) {
-                    CompoundTag item = palette.getCompound(i);
+                    CompoundTag item = palette.getCompound(i).copy();
                     String name = item.getString("Name");
                     if (!name.equalsIgnoreCase("minecraft:air") && !name.equalsIgnoreCase("minecraft:structure_block")) {
                         newIndex[i] = currIndex;
+                        CompoundTag props = item.getCompound("Properties").copy();
+                        if (props.contains("waterlogged", 8)) { // 8 = StringTag
+                            props.putString("waterlogged", "true");
+                            item.put("Properties", props);
+                        }
                         newPalette.add(item);
                         currIndex++;
                     } else {
@@ -292,13 +393,13 @@ public class Main {
                 ruin.put("palette", palette);
 
                 // Update blocks, replacing chest structure blocks with empty chests
-                ListTag blocks = ruin.getList("blocks", 10); // 10 = CompoundTag
+                ListTag blocks = ruin.getList("blocks", 10).copy(); // 10 = CompoundTag
                 ListTag newBlocks = new ListTag();
 
                 // There's only ever 1 chest in all ruins
                 int chestLocation = -1;
                 for (int i = 0; i < blocks.size(); i++) {
-                    CompoundTag block = blocks.getCompound(i);
+                    CompoundTag block = blocks.getCompound(i).copy();
 
                     int index = newIndex[block.getInt("state")];
                     if (index != -1) {
@@ -326,7 +427,7 @@ public class Main {
 
                     // LootTable: "minecraft:chests/underwater_ruin_small"
                     // LootTableSeed: 7000719051697139786
-                    CompoundTag chest = blocks.getCompound(chestLocation);
+                    CompoundTag chest = blocks.getCompound(chestLocation).copy();
                     CompoundTag nbt = new CompoundTag();
                     nbt.putString("id", "minecraft:chest");
                     if (isBig)
