@@ -35,13 +35,13 @@ All deep oceans use their own object layers, as specified in each section
 
 deep lukewarm
  - sand (1000/100), gravel (300/30), clay (300/30), bone (100/5), obsidian (1/1), magma (1/1)
- - kelp (2%)
- - seagrass (5%)
+ - kelp (1%)
+ - seagrass (15%)
  - shipwrecks
  - small ruins (warm sandstone and mossy stonebrick)
    - shipwreck:ruin = 5:1
    - warm:mossy = 3:1
-   - 1 object per 4,000
+   - 1 object per 16,000
    - 20% factor cover in final
 
    - shipwrecks 32% (80%)
@@ -50,10 +50,10 @@ deep lukewarm
 
 deep ocean (neither hot or cold)
  - sand (650/100), gravel (650/100), clay (300/30), bone (100/5), obsidian (1/1), magma (1/1)
- - seagrass (2%)
+ - seagrass (8%)
  - medium ruins (stonebrick and mossy only)
    - small:big = 5:1
-   - 1 object per 4,000
+   - 1 object per 16,000
    - 30% factor cover in final
 
    - big stone   1% (10%)
@@ -63,11 +63,11 @@ deep ocean (neither hot or cold)
 
 deep cold
  - gravel (50/100), packed ice (10/50), clay (10/50), bone (5/5), prismarine (1/1)
- - seagrass (1%)
+ - seagrass (3%)
  - shipwrecks
  - small ruins (stonebrick and cracked stonebrick)
    - shipwreck:ruin = 1:5
-   - 1 object per 4,0000
+   - 1 object per 16,0000
    - 40% factor cover in final
 
    - shipwrecks 1% (20%)
@@ -75,13 +75,13 @@ deep cold
    - cracked    5% (40%)
 
 deep frozen
- - gravel (50/100), packed ice (10/75), clay (5/30), bone (5/1), prismarine (3/1), sea lantern (1/1)
+ - gravel (50/100), packed ice (10/75), clay (5/30), bone (3/5), prismarine (3/1), sea lantern (1/1)
  - large ruins (stonebrick and cracked stonebrick)
    - small:big = 2:1
-   - 1 object per 4,000
+   - 1 object per 16,000
    - 50% factor cover in final
 
-   - small brick   1% (16.67%)
-   - small cracked 1% (16.67%)
-   - big brick     1% (33.33%)
-   - big cracked   1% (33.33%)
+   - small brick   1% (33.33%)
+   - small cracked 1% (33.33%)
+   - big brick     1% (16.67%)
+   - big cracked   1% (16.67%)

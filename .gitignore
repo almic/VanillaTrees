@@ -1,7 +1,0 @@
-*.class
-
-# Ignore the loot tables
-ocean_structures/OceanPatcher/src/main/resources/data/minecraft/loot_tables/chests/*.json
-ocean_structures/OceanPatcher/src/main/resources/data/minecraft/loot_tables/chests/village/*.json
-ocean_structures/OceanPatcher/target/classes/data/minecraft/loot_tables/chests/*.json
-ocean_structures/OceanPatcher/target/classes/data/minecraft/loot_tables/chests/village/*.json

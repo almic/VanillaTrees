@@ -28,8 +28,8 @@ Here's the things I haven't added yet but would like to in the future:
 - [ ] Ice spikes
 - [ ] Glaciers
 - [ ] Mushroom fields
-- [X] Shipwrecks & buried treasure *(see section below)*
-- [X] Underwater ruins (would add prismarine, currently lacking in this pack)
+- [X] ~~Shipwrecks & buried treasure *(see section below)*~~
+- [X] ~~Underwater ruins (would add prismarine, currently lacking in this pack)~~
 
 ### What's not included/ unfixable issues
 
