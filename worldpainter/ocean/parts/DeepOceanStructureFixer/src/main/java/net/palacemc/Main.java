@@ -1,9 +1,7 @@
 package net.palacemc;
 
-import org.pepsoft.minecraft.Material;
 import org.pepsoft.worldpainter.layers.Bo2Layer;
 import org.pepsoft.worldpainter.layers.CustomLayer;
-import org.pepsoft.worldpainter.layers.bo2.Bo2Object;
 import org.pepsoft.worldpainter.layers.bo2.Bo2ObjectTube;
 import org.pepsoft.worldpainter.layers.bo2.Structure;
 import org.pepsoft.worldpainter.objects.WPObject;

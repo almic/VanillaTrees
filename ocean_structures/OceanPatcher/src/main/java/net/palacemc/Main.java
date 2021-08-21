@@ -82,7 +82,7 @@ public class Main {
                         // remove the structure block, set waterlogged
                         if (!item.getString("Name").equalsIgnoreCase("minecraft:structure_block")) {
                             CompoundTag props = item.getCompound("Properties").copy();
-                            if (props.contains("waterlogged", 8)) { // 8 = StringTag
+                            if (props.contains("waterlogged", TagTypes.STRING)) {
                                 props.putString("waterlogged", "true");
                                 item.put("Properties", props);
                             }
@@ -364,7 +364,7 @@ public class Main {
                     if (!name.equalsIgnoreCase("minecraft:air") && !name.equalsIgnoreCase("minecraft:structure_block")) {
                         newIndex[i] = currIndex;
                         CompoundTag props = item.getCompound("Properties").copy();
-                        if (props.contains("waterlogged", 8)) { // 8 = StringTag
+                        if (props.contains("waterlogged", TagTypes.STRING)) {
                             props.putString("waterlogged", "true");
                             item.put("Properties", props);
                         }

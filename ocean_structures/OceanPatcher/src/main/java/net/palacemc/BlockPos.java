@@ -37,8 +37,7 @@ class BlockPos {
     public boolean equals(Object obj) {
         if (obj == null) return false;
 
-        if (obj instanceof BlockPos) {
-            BlockPos other = (BlockPos) obj;
+        if (obj instanceof BlockPos other) {
             return (this.x == other.x) && (this.y == other.y) && (this.z == other.z);
         }
 
@@ -46,13 +45,12 @@ class BlockPos {
     }
 
     public BlockPos relative(Direction direction) {
-        switch (direction) {
-            case NORTH: return new BlockPos(x, y, z - 1);
-            case EAST: return new BlockPos(x + 1, y, z);
-            case SOUTH: return new BlockPos(x, y, z + 1);
-            case WEST: return new BlockPos(x - 1, y, z);
-            default: return null; // should never happen
-        }
+        return switch (direction) {
+            case NORTH -> new BlockPos(x, y, z - 1);
+            case EAST -> new BlockPos(x + 1, y, z);
+            case SOUTH -> new BlockPos(x, y, z + 1);
+            case WEST -> new BlockPos(x - 1, y, z);
+        };
     }
 
     public BlockPos simple() {

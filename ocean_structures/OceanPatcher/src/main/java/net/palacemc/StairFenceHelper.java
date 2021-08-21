@@ -7,9 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 
 import java.util.Map;
 
-public class StairFenceHelper {
-
-    private Map<BlockPos, CompoundTag> blocks;
+public record StairFenceHelper(Map<BlockPos, CompoundTag> blocks) {
 
     public StairFenceHelper(Map<BlockPos, CompoundTag> blocks) {
         // strip index and state, they only screw this up
@@ -25,23 +23,23 @@ public class StairFenceHelper {
         STRAIGHT;
 
         public String asString() {
-            switch (this) {
-                case OUTER_LEFT: return "outer_left";
-                case OUTER_RIGHT: return "outer_right";
-                case INNER_LEFT: return "inner_left";
-                case INNER_RIGHT: return "inner_right";
-                default: return "straight";
-            }
+            return switch (this) {
+                case OUTER_LEFT -> "outer_left";
+                case OUTER_RIGHT -> "outer_right";
+                case INNER_LEFT -> "inner_left";
+                case INNER_RIGHT -> "inner_right";
+                default -> "straight";
+            };
         }
 
         public static StairsShape from(String string) {
-            switch (string) {
-                case "outer_left": return OUTER_LEFT;
-                case "outer_right": return OUTER_RIGHT;
-                case "inner_left": return INNER_LEFT;
-                case "inner_right": return INNER_RIGHT;
-                default: return STRAIGHT;
-            }
+            return switch (string) {
+                case "outer_left" -> OUTER_LEFT;
+                case "outer_right" -> OUTER_RIGHT;
+                case "inner_left" -> INNER_LEFT;
+                case "inner_right" -> INNER_RIGHT;
+                default -> STRAIGHT;
+            };
         }
     }
 
@@ -50,10 +48,10 @@ public class StairFenceHelper {
         BOTTOM;
 
         public static Half from(String string) {
-            switch (string) {
-                case "top": return TOP;
-                default: return BOTTOM;
-            }
+            return switch (string) {
+                case "top" -> TOP;
+                default -> BOTTOM;
+            };
         }
     }
 
@@ -64,7 +62,7 @@ public class StairFenceHelper {
         FENCE
     }
 
-    private class Block {
+    private static class Block {
         BlockPos position;
         CompoundTag self;
         BlockType type;
@@ -124,15 +122,15 @@ public class StairFenceHelper {
         }
 
         boolean[] getConnections() {
-            return new boolean[] {north, east, south, west};
+            return new boolean[]{north, east, south, west};
         }
 
         void setConnection(Direction direction, boolean bool) {
             switch (direction) {
-                case NORTH: north = bool; break;
-                case EAST: east = bool; break;
-                case SOUTH: south = bool; break;
-                case WEST: west = bool; break;
+                case NORTH -> north = bool;
+                case EAST -> east = bool;
+                case SOUTH -> south = bool;
+                case WEST -> west = bool;
             }
         }
     }
@@ -183,7 +181,7 @@ public class StairFenceHelper {
         block = helper.get(position.relative(self.direction.getOpposite()));
         if (block != null && block.type == BlockType.STAIR) {
             StairBlock other = (StairBlock) block;
-            if (other.half == self.half  && !self.direction.onAxis(other.direction)) {
+            if (other.half == self.half && !self.direction.onAxis(other.direction)) {
                 if (other.direction == self.direction.getCounterClockWise()) {
                     return StairsShape.INNER_LEFT.asString();
                 }
@@ -199,7 +197,7 @@ public class StairFenceHelper {
     boolean[] getFenceConnections(BlockPos position) {
         BlockHelper helper = new BlockHelper();
         Block block = helper.get(position.simple());
-        if (block == null || block.type != BlockType.FENCE) return new boolean[] {};
+        if (block == null || block.type != BlockType.FENCE) return new boolean[]{};
 
         FenceBlock self = (FenceBlock) block;
 
@@ -210,14 +208,9 @@ public class StairFenceHelper {
                 continue;
             }
             switch (block.type) {
-                case FULL:
-                case FENCE:
-                    self.setConnection(direction, true);
-                    break;
-                case SLAB:
-                    self.setConnection(direction, ((SlabBlock) block).isFull());
-                    break;
-                case STAIR:
+                case FULL, FENCE -> self.setConnection(direction, true);
+                case SLAB -> self.setConnection(direction, ((SlabBlock) block).isFull());
+                case STAIR -> {
                     StairBlock stair = (StairBlock) block;
                     if (stair.direction == direction) {
                         self.setConnection(direction, false);
@@ -229,6 +222,7 @@ public class StairFenceHelper {
                     } else { // Direction must be clockwise
                         self.setConnection(direction, StairsShape.from(getStairShape(stair.position)) == StairsShape.INNER_RIGHT);
                     }
+                }
             }
         }
 

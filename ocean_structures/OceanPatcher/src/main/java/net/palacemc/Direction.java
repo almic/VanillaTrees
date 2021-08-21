@@ -8,43 +8,37 @@ public enum Direction {
     WEST;
 
     public static Direction from(String string) {
-        switch (string) {
-            case "north": return NORTH;
-            case "east": return EAST;
-            case "south": return SOUTH;
-            default: return WEST;
-        }
+        return switch (string) {
+            case "north" -> NORTH;
+            case "east" -> EAST;
+            case "south" -> SOUTH;
+            default -> WEST;
+        };
     }
 
     public Direction getOpposite() {
-        switch (this) {
-            case NORTH: return SOUTH;
-            case EAST: return WEST;
-            case SOUTH: return NORTH;
-            default: return EAST;
-        }
+        return switch (this) {
+            case NORTH -> SOUTH;
+            case EAST -> WEST;
+            case SOUTH -> NORTH;
+            default -> EAST;
+        };
     }
 
     public Direction getCounterClockWise() {
-        switch (this) {
-            case NORTH: return WEST;
-            case EAST: return NORTH;
-            case SOUTH:  return EAST;
-            default: return SOUTH;
-        }
+        return switch (this) {
+            case NORTH -> WEST;
+            case EAST -> NORTH;
+            case SOUTH -> EAST;
+            default -> SOUTH;
+        };
     }
 
     public boolean onAxis(Direction other) {
-        switch (this) {
-            case NORTH:
-            case SOUTH:
-                return (other == NORTH) || (other == SOUTH);
-            case EAST:
-            case WEST:
-                return (other == EAST) || (other == WEST);
-            default:
-                return false;
-        }
+        return switch (this) {
+            case NORTH, SOUTH -> (other == NORTH) || (other == SOUTH);
+            case EAST, WEST -> (other == EAST) || (other == WEST);
+        };
     }
 
 }
