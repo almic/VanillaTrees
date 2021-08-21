@@ -31,7 +31,10 @@
 
 package net.palacemc;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -45,10 +48,31 @@ import net.minecraft.nbt.*;
 public class Main {
 
     // Relative path of ruins and shipwrecks should be "VanillaTrees\ocean_structures" and this project should be in that path
-    private static Path structurePath = Paths.get("").resolve("../").toAbsolutePath().normalize();
+    private static final Path structurePath = Paths.get("").resolve("../").toAbsolutePath().normalize();
 
     // Until WorldPainter supports multiple palettes, leave this as 'true'
-    private static boolean splitPalettes = true;
+    private static final boolean splitPalettes = true;
+
+    /** Number of seeded random loot variants to create */
+    private static final int LootGenerated = 0;
+
+    /** Number of static random loot variants to create
+     *
+     * Note: this is only for those who do NOT have naturally generated Minecraft terrain with structures.
+     *
+     * These specific chests can cause massive lag/ crashes on such worlds:
+     *  - Shipwreck map chest (appears in any backhalf/ upsidedown/ full/ with_mast variants only)
+     *  - All ruins chest
+     *
+     * As such, you should only need to use static loot variants for these. But, this generates all static variants for
+     * all structures anyway, in case that's what you really want.
+     *
+     * WARNING!
+     * If you set this number too low, it's possible you may generate a world with very predictable loot. For example,
+     * you generate only 2 shipwreck variants each, and only one of those contain a specifically enchanted book, then
+     * players will discover this quickly and can seek out all enchanted books from those shipwrecks.
+     */
+    private static final int LootStatic = 16;
 
     public static void main (String[] args) {
         System.out.println("Working directory: " + structurePath.toString());
@@ -59,7 +83,8 @@ public class Main {
         assert listing != null;
         ArrayList<File> ships = new ArrayList<>(Arrays.asList(listing));
 
-        System.out.println("Found " + ships.size() + " shipwrecks, generating 10 loot variants each, totalling " + ships.size() * 10 + "...");
+        int work = ships.size() * (LootStatic + LootGenerated);
+        System.out.println("Found " + ships.size() + " shipwrecks, generating " + LootGenerated + "+" + LootStatic + " loot variants and each, totalling " + work + "...");
         int success = 0;
 
         for (File shipFile : ships) {
@@ -252,72 +277,126 @@ public class Main {
                     palettes.set(i, newPalettes.get(i));
                 }
 
-                ship.put("palettes", palettes);
+                CompoundTag shipLoot = ship.copy();
+                // WorldPainter currently doesn't support multiple palettes, so we just use the first palette
+                if (splitPalettes) {
+                    shipLoot.remove("palettes");
+                    shipLoot.put("palette", palettes.getList(0));
+                } else {
+                    shipLoot.put("palettes", palettes);
+                }
 
                 // Now, we make 10 versions with random loot seeds
+                ListTag blocksLoot = blocks.copy();
                 String shipName = shipFile.getName();
                 shipName = shipName.substring(0, shipName.length() - 4); // strip ".nbt"
                 Path outPath = shipFile.toPath().resolve("../../"); // Back out of the "default" directory
                 Random rng = new Random();
-                for (int i = 0; i < 10; i++) {
+                for (int i = 0; i < LootGenerated; i++) {
 
                     // LootTable: "minecraft:chests/shipwreck_treasure"
                     // LootTableSeed: 7000719051697139786
 
                     if (matches.containsKey(0)) {
                         // map
-                        CompoundTag chest = blocks.getCompound(matches.get(0)).copy();
+                        CompoundTag chest = blocksLoot.getCompound(matches.get(0)).copy();
                         CompoundTag nbt = new CompoundTag();
                         nbt.putString("id", "minecraft:chest");
                         nbt.putString("LootTable", "minecraft:chests/shipwreck_map");
                         nbt.putLong("LootSeed", rng.nextLong());
                         chest.put("nbt", nbt);
 
-                        blocks.set(matches.get(0), chest);
+                        blocksLoot.set(matches.get(0), chest);
                     }
 
                     if (matches.containsKey(1)) {
                         // supply
-                        CompoundTag chest = blocks.getCompound(matches.get(1)).copy();
+                        CompoundTag chest = blocksLoot.getCompound(matches.get(1)).copy();
                         CompoundTag nbt = new CompoundTag();
                         nbt.putString("id", "minecraft:chest");
                         nbt.putString("LootTable", "minecraft:chests/shipwreck_supply");
                         nbt.putLong("LootSeed", rng.nextLong());
                         chest.put("nbt", nbt);
 
-                        blocks.set(matches.get(1), chest);
+                        blocksLoot.set(matches.get(1), chest);
                     }
 
                     if (matches.containsKey(2)) {
                         // treasure
-                        CompoundTag chest = blocks.getCompound(matches.get(2)).copy();
+                        CompoundTag chest = blocksLoot.getCompound(matches.get(2)).copy();
                         CompoundTag nbt = new CompoundTag();
                         nbt.putString("id", "minecraft:chest");
                         nbt.putString("LootTable", "minecraft:chests/shipwreck_treasure");
                         nbt.putLong("LootSeed", rng.nextLong());
                         chest.put("nbt", nbt);
 
-                        blocks.set(matches.get(2), chest);
+                        blocksLoot.set(matches.get(2), chest);
                     }
 
-                    ship.put("blocks", blocks);
-
-                    // WorldPainter currently doesn't support multiple palettes, so we just use the first palette
-                    if (splitPalettes) {
-                        ship.remove("palettes");
-                        ship.put("palette", palettes.getList(0));
-                    }
+                    shipLoot.put("blocks", blocksLoot);
 
                     Path temp = outPath.resolve("generated/" + shipName + "_" + i + ".nbt");
                     //noinspection ResultOfMethodCallIgnored
                     temp.resolve("../").toFile().mkdirs(); // Ensure directory exists
-                    File shipOut = temp.toFile();
+                    File shipOutTable = temp.toFile();
 
                     try {
-                        NbtIo.writeCompressed(ship, new FileOutputStream(shipOut));
+                        NbtIo.writeCompressed(shipLoot, new FileOutputStream(shipOutTable));
                         success++;
                     } catch (IOException ex) {
-                        System.err.println("Failed to save NBT file: " + shipOut.getPath());
+                        System.err.println("Failed to save NBT file: " + shipOutTable.getPath());
+                        ex.printStackTrace();
+                    }
+                }
+
+                // Generate static loot for those who need it
+                for (int i = 0; i < LootStatic; i++) {
+
+                    if (matches.containsKey(0)) {
+                        // map
+                        CompoundTag chest = blocksLoot.getCompound(matches.get(0)).copy();
+                        CompoundTag nbt = new CompoundTag();
+                        nbt.putString("id", "minecraft:chest");
+                        nbt.put("Items", LootGenerator.Loot.toNBT(LootGenerator.SHIPWRECK_MAP.generateLoot(rng), rng));
+                        chest.put("nbt", nbt);
+
+                        blocksLoot.set(matches.get(0), chest);
+                    }
+
+                    if (matches.containsKey(1)) {
+                        // supply
+                        CompoundTag chest = blocksLoot.getCompound(matches.get(1)).copy();
+                        CompoundTag nbt = new CompoundTag();
+                        nbt.putString("id", "minecraft:chest");
+                        nbt.put("Items", LootGenerator.Loot.toNBT(LootGenerator.SHIPWRECK_SUPPLY.generateLoot(rng), rng));
+                        chest.put("nbt", nbt);
+
+                        blocksLoot.set(matches.get(1), chest);
+                    }
+
+                    if (matches.containsKey(2)) {
+                        // treasure
+                        CompoundTag chest = blocksLoot.getCompound(matches.get(2)).copy();
+                        CompoundTag nbt = new CompoundTag();
+                        nbt.putString("id", "minecraft:chest");
+                        nbt.put("Items", LootGenerator.Loot.toNBT(LootGenerator.SHIPWRECK_TREASURE.generateLoot(rng), rng));
+                        chest.put("nbt", nbt);
+
+                        blocksLoot.set(matches.get(2), chest);
+                    }
+
+                    shipLoot.put("blocks", blocksLoot);
+
+                    Path temp = outPath.resolve("static/" + shipName + "_" + i + ".nbt");
+                    //noinspection ResultOfMethodCallIgnored
+                    temp.resolve("../").toFile().mkdirs(); // Ensure directory exists
+                    File shipOutTable = temp.toFile();
+
+                    try {
+                        NbtIo.writeCompressed(shipLoot, new FileOutputStream(shipOutTable));
+                        success++;
+                    } catch (IOException ex) {
+                        System.err.println("Failed to save NBT file: " + shipOutTable.getPath());
                         ex.printStackTrace();
                     }
                 }
@@ -328,7 +407,7 @@ public class Main {
             }
         }
 
-        System.out.println("Successfully created " + success + " shipwrecks, with " + (ships.size() * 10 - success) + " failures.");
+        System.out.println("Successfully created " + success + " shipwrecks, with " + (work - success) + " failures.");
 
         System.out.println("\nNow building ruins");
         System.out.println("Finding ruins...");
@@ -337,7 +416,8 @@ public class Main {
         assert listing != null;
         ArrayList<File> ruins = new ArrayList<>(Arrays.asList(listing));
 
-        System.out.println("Found " + ruins.size() + " ruins, generating 10 loot variants each, totalling " + ruins.size() * 10 + "...");
+        work = ruins.size() * (LootStatic + LootGenerated);
+        System.out.println("Found " + ruins.size() + " ruins, generating " + LootGenerated + "+" + LootStatic + " loot variants each, totalling " + work + "...");
         success = 0;
 
         /* Not all ruins have chests, here are the ones lacking loot:
@@ -390,7 +470,8 @@ public class Main {
                 int chestIndex = newPalette.size() - 1; // for later
 
                 palette = newPalette;
-                ruin.put("palette", palette);
+                CompoundTag ruinLoot = ruin.copy();
+                ruinLoot.put("palette", palette);
 
                 // Update blocks, replacing chest structure blocks with empty chests
                 ListTag blocks = ruin.getList("blocks", 10).copy(); // 10 = CompoundTag
@@ -423,7 +504,7 @@ public class Main {
                 Path outPath = ruinFile.toPath().resolve("../../"); // Back out of the "default" directory
                 Random rng = new Random();
                 boolean isBig = ruinFile.getName().startsWith("big");
-                for (int i = 0; i < 10; i++) {
+                for (int i = 0; i < LootGenerated; i++) {
 
                     // LootTable: "minecraft:chests/underwater_ruin_small"
                     // LootTableSeed: 7000719051697139786
@@ -437,7 +518,7 @@ public class Main {
                     nbt.putLong("LootSeed", rng.nextLong());
                     chest.put("nbt", nbt);
                     blocks.set(chestLocation, chest);
-                    ruin.put("blocks", blocks);
+                    ruinLoot.put("blocks", blocks);
 
                     Path temp = outPath.resolve("generated/" + ruinName + "_" + i + ".nbt");
                     //noinspection ResultOfMethodCallIgnored
@@ -445,7 +526,35 @@ public class Main {
                     File ruinOut = temp.toFile();
 
                     try {
-                        NbtIo.writeCompressed(ruin, new FileOutputStream(ruinOut));
+                        NbtIo.writeCompressed(ruinLoot, new FileOutputStream(ruinOut));
+                        success++;
+                    } catch (IOException ex) {
+                        System.err.println("Failed to save NBT file: " + ruinOut.getPath());
+                        ex.printStackTrace();
+                    }
+                }
+
+                // Generate static loot for those who need it
+                for (int i = 0; i < LootStatic; i++) {
+
+                    CompoundTag chest = blocks.getCompound(chestLocation).copy();
+                    CompoundTag nbt = new CompoundTag();
+                    nbt.putString("id", "minecraft:chest");
+                    if (isBig)
+                        nbt.put("Items", LootGenerator.Loot.toNBT(LootGenerator.RUIN_BIG.generateLoot(rng), rng));
+                    else
+                        nbt.put("Items", LootGenerator.Loot.toNBT(LootGenerator.RUIN_SMALL.generateLoot(rng), rng));
+                    chest.put("nbt", nbt);
+                    blocks.set(chestLocation, chest);
+                    ruinLoot.put("blocks", blocks);
+
+                    Path temp = outPath.resolve("static/" + ruinName + "_" + i + ".nbt");
+                    //noinspection ResultOfMethodCallIgnored
+                    temp.resolve("../").toFile().mkdirs(); // Ensure directory exists
+                    File ruinOut = temp.toFile();
+
+                    try {
+                        NbtIo.writeCompressed(ruinLoot, new FileOutputStream(ruinOut));
                         success++;
                     } catch (IOException ex) {
                         System.err.println("Failed to save NBT file: " + ruinOut.getPath());
@@ -459,7 +568,7 @@ public class Main {
             }
         }
 
-        System.out.println("Successfully created " + success + " ruins, with " + (ruins.size() * 10 - success) + " failures.");
+        System.out.println("Successfully created " + success + " ruins, with " + (work - success) + " failures.");
 
         System.out.println("Done!");
 

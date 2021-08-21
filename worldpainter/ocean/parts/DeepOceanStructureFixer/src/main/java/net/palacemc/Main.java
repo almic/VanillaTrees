@@ -17,23 +17,29 @@ import java.util.zip.GZIPOutputStream;
 public class Main {
 
     // Relative path of WorldPainter layers should be "VanillaTrees\worldpainter\ocean\parts" and this project should be in that path
-    private static Path layersPath = Paths.get("").resolve("../").toAbsolutePath().normalize();
+    private static final Path layersPath = Paths.get("").resolve("../original/").toAbsolutePath().normalize();
+    private static final Path outPath = Paths.get("").resolve("../").toAbsolutePath().normalize();
 
-    private static String[] layers = {
-            "cold_structures.layer",
-            "frozen_structures.layer",
-            "lukewarm_structures.layer",
-            "ocean_structures.layer"
+    private static final String[] layers = {
+            //"cold_structures.layer",
+            "cold_structures_mixed.layer",
+            "cold_structures_static.layer",
+            //"frozen_structures.layer",
+            "frozen_structures_static.layer",
+            //"lukewarm_structures.layer",
+            "lukewarm_structures_mixed.layer",
+            "lukewarm_structures_static.layer",
+            //"ocean_structures.layer",
+            "ocean_structures_static.layer"
     };
 
     public static void main(String[] args) {
         System.out.println("Loading layers");
 
         for (String layerName : layers) {
-            File layerFile = new File(layersPath.resolve(layerName).toString());
             System.out.println("Processing file: " + layerName);
             try {
-                ObjectInputStream in = new ObjectInputStream(new GZIPInputStream(new BufferedInputStream(new FileInputStream(layerFile))));
+                ObjectInputStream in = inputStreamOf(layersPath.resolve(layerName));
 
                 CustomLayer loadedLayer = (CustomLayer) in.readObject();
                 in.close();
@@ -60,8 +66,8 @@ public class Main {
 
                 // Now we just save it back
                 try {
-                    ObjectOutputStream out = new ObjectOutputStream(new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(layerFile))));
-                    out.writeObject((CustomLayer) layer);
+                    ObjectOutputStream out = outputStreamOf(outPath.resolve(layerName));
+                    out.writeObject(layer);
                     out.close();
                 } catch (IOException ex) {
                     System.err.println("Unable to write layer to file: " + layerName);
@@ -81,6 +87,14 @@ public class Main {
         }
 
         System.out.println("Done!");
+    }
+
+    private static ObjectInputStream inputStreamOf(Path path) throws IOException {
+        return new ObjectInputStream(new GZIPInputStream(new BufferedInputStream(new FileInputStream(path.toString()))));
+    }
+
+    private static ObjectOutputStream outputStreamOf(Path path) throws IOException {
+        return new ObjectOutputStream(new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(path.toString()))));
     }
 
 }
