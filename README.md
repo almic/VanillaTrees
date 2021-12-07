@@ -20,7 +20,48 @@ normal Minecraft has.
 - Shipwrecks
 - Underwater ruins
 
-### TODO:
+## How to use
+
+Open the `vanilla_trees_test.world` in WorldPainter to get a quick look at the layer brushes included with this pack.
+
+A lot of premade layer brushes are included, which are in the `worldpainter` folder of this repository. If you just want the premade stuff, you need ONLY the `*.layer` files. You do not need anything from the `parts` folders. Those are just there if you want to have more specific control over exactly what you are painting, like perhaps a desert terrain but with swamp trees (if you are crazy like that).
+
+Anyway, here's a basic guide for using the layer brushes.
+
+1. Create a new folder for your work files, like "My Custom World"
+2. Create a new world on WorldPainter, save it to your "My Custom World" folder
+3. Create a new folder in your world folder, name it something like "brushes"
+4. Download the `.layer` files you want and save them to the "brushes" folder
+
+> You should now have a directory kinda like this:
+> ```
+> My Custom World/
+> ├─ my_world.world
+> └─ brushes/
+>    ├─ mega_spruce.layer
+>    ├─ oak_bee_forest.layer
+>    └─ sunflower_bee_plains.layer
+> ```
+
+5. Go back to WorldPainter, find the Layers pane. It should be at the bottom left of the application.
+6. Click the `+` button at the bottom of the list
+7. Select `Import custom layer(s) from file...`
+8. Browse to your "brushes" folder and select everything you want to use
+9. Click `Open`
+
+> Now you should see something sort of like this:  
+> <img src="/images/layer_window.png" width="176"/>
+
+10. Select a layer from the "final" tab, and paint it where you want it.
+11. **Don't forget to add biomes!** This pack does not automatically add biomes!
+12. Export world
+13. $$$
+
+I suggest only using the layers in the "final" tab. Those extra tabs are just the "parts" of each layer. Each layer typically includes a terrain, terrain cover (ex: grass), and objects (ex: trees, boulders) You shouldn't use those individually unless you really know what you are doing!
+
+A lot of the folders include additional README files to help you understand how to use the provided brushes, and some include details on how those brushes were created.
+
+## TODO:
 
 Here's the things I haven't added yet but would like to in the future:
 
@@ -31,7 +72,7 @@ Here's the things I haven't added yet but would like to in the future:
 - [X] ~~Shipwrecks & buried treasure *(see section below)*~~
 - [X] ~~Underwater ruins (would add prismarine, currently lacking in this pack)~~
 
-### What's not included/ unfixable issues
+## What's not included/ unfixable issues
 
 **This pack does not and will not include complex structures like villages or strongholds.** At the moment, I have no plans to include these because of how complex they are, as they use hundreds of small pieces and connect them at various heights. If you want custom strongholds or villages, you're best doing it manually in your world, rather than loading custom structure pieces or trying to use WorldPainter.
 
