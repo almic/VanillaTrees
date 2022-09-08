@@ -72,6 +72,10 @@ Here's the things I haven't added yet but would like to in the future:
 - [X] ~~Shipwrecks & buried treasure *(see section below)*~~
 - [X] ~~Underwater ruins (would add prismarine, currently lacking in this pack)~~
 
+## Extra Information
+
+Every single folder contains a README which explains what's in that folder, how it is organized, and what you can do with it. I suggest you poke around and read some of these files, there's some good information in some of them. Some layers/ NBTs are more "special" than others, so if you notice something "special," and want to understand it better, you can likely find out in the README file associated with it.
+
 ## What's not included/ unfixable issues
 
 **This pack does not and will not include complex structures like villages or strongholds.** At the moment, I have no plans to include these because of how complex they are, as they use hundreds of small pieces and connect them at various heights. If you want custom strongholds or villages, you're best doing it manually in your world, rather than loading custom structure pieces or trying to use WorldPainter.
@@ -92,4 +96,4 @@ Anyway, here's some problems with this pack that I will not be fixing, because t
 
 All intellectual property of Minecraft belongs to Mojang AB. I do not take credit for any of this, except the work of making the collection, I guess. When using these files, you must adhere to the terms and licenses of Minecraft. If you want to give me a shoutout when using these files, go ahead, but you don't have to.
 
-Just in case, my twitter is [@AlmicOrNothing](https://twitter.com/AlmicOrNothing).
+Just in case, my discord username is `almic™#0001`. I check it often and accept friend requests, so you can add me and message me.
