@@ -13,7 +13,7 @@ These specific chests can cause massive lag/ crashes on such worlds:
   - Shipwreck map chest (appears in any backhalf/ upsidedown/ full/ with_mast variants only)
   - All ruins chest
 
-If you absolutely require static structures and are making a massive map (like even bigger than MinecraftEarthMap), I recommend using the included OceanPatcher and generating more static loot variants.
+If you absolutely require static structures and are making a massive map (like even bigger than MinecraftEarthMap), I recommend using the OceanPatcher and generating more static loot variants. The project files for OceanPatcher are only available in the full repository source download. If you downloaded the "Brushes" file, it won't be here. Check the project README.md on the homepage (https://github.com/almic/VanillaTrees/) for details.
 
 -----
 
