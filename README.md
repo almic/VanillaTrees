@@ -21,6 +21,19 @@ I've gone through every unique surface biome (from 1.15) and copied its look wit
 
 For your WorldPainting pleasure, the layers **do not** add biomes. The variety of biomes is great and you're almost certainly going to want to mix things up. Remember to add your biomes after painting the terrain!
 
+## Directory
+
+1. [Directory](#directory)
+2. [How to Use](#how-to-use)
+3. [Advanced Use](#advanced-use)
+  i. [Modifying Anything](#modifying-anything)
+  ii. [Modifying Structures/ Layers](#modifying-structures-layers)
+  iii. [Modifying Loot](#modifying-loot)
+4. [TODO](#todo)
+5. [Extra Information](#extra-information)
+6. [What's not included/ unfixable issues](#whats-not-included-unfixable-issues)
+7. [License/ Terms/ Credits](#license-terms-credits)
+
 ## How to Use
 
 This section explains how to download and start using the brushes quickly. Luckily for you, a lot of preliminary work has been done to make it easy to just download the brushes and start painting with them. For advanced users who want to modify the layers or change things like the loot in shipwrecks/ underwater ruins, first go through this section, and then read the [Advanced Use](#advanced-use) section below.
@@ -34,7 +47,7 @@ I highly recommend following along closely and creating the folders in this sect
 > │
 > └─ My Custom World/
 >    ├─ my_custom_world.world
->    └─ brushes/
+>    └─ custom brushes/
 >       └─ # copied layers from "Brushes"
 > ```
 
@@ -63,7 +76,7 @@ I highly recommend following along closely and creating the folders in this sect
 11. Click `Open`
 
 > Now you should see something sort of like this in WorldPainter:  
-> <img src="/images/layer_window.png" width="176"/>
+> <img src="/images/layer_window.png" width="176"/>  
 > If you imported a lot of layers, you probably won't be able to see them all. I recommend clicking and dragging the "final" tab out to its own window. If you still can't see everything, you'll have to create new palette tabs to hold them.
 
 12. Select a layer from the "final" tab, and paint it where you want it.
